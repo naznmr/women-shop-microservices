@@ -1,21 +1,15 @@
-# فروشگاه میکروسرویسی لباس زنانه (ایرانی/فارسی) — چهار فصل
+# فروشگاه میکروسرویسی لباس زنانه 
 
-این ریپو یک پروژه‌ی کامل برای «طراحی، توسعه و استقرار یک سامانه‌ی تجارت‌الکترونیک مبتنی بر معماری میکروسرویس» است:
+طراحی، توسعه و استقرار یک سامانه‌ی تجارت‌الکترونیک مبتنی بر معماری میکروسرویس:
 - User Service (احراز هویت JWT + پروفایل)
 - Product Service (کاتالوگ محصولات + جستجو)
 - Order Service (ثبت سفارش + اتصال به پرداخت + انتشار رویداد)
 - Payment Service (شبیه‌سازی پرداخت + خطا)
 - Notification Service (مصرف رویدادها از RabbitMQ و ارسال اعلان — شبیه‌سازی)
 
-## ویژگی‌های «ایرانی/فارسی»
-- UI و متون فارسی + راست‌به‌چپ (RTL)
-- پول: تومان (Toman)
-- فصل‌های محصول: بهار / تابستان / پاییز / زمستان
-- دسته‌بندی‌های رایج پوشاک زنانه (مانتو، شومیز، روسری، لباس مجلسی، پالتو و …)
-
 ---
 
-## 1) اجرای سریع با Docker Compose (پیشنهادی برای ارائه‌ی عملی)
+## 1) اجرای سریع با Docker Compose
 
 ### پیش‌نیازها
 - Docker Desktop (ویندوز/مک) یا Docker Engine (لینوکس)
@@ -42,18 +36,6 @@ docker compose up --build
 
 ---
 
-## 2) دمو‌ی سناریو (برای ویدئو)
-1) ثبت‌نام: User Service → `/auth/register`
-2) لاگین: `/auth/login` → دریافت JWT
-3) افزودن چند محصول: Product Service → `/products` (یا اجرای اسکریپت seed)
-4) مشاهده‌ی محصولات در Frontend
-5) ثبت سفارش در Frontend (Checkout) → Order Service
-6) Order Service → Payment Service (شبیه‌سازی موفق/ناموفق)
-7) در صورت موفقیت: Order Service رویداد را به RabbitMQ می‌فرستد
-8) Notification Service رویداد را مصرف کرده و «ارسال ایمیل» را لاگ می‌کند
-
----
-
 ## 3) استقرار روی Kubernetes (Minikube)
 > فایل‌های آماده در پوشه‌ی `k8s/` قرار دارند.
 
@@ -74,7 +56,7 @@ kubectl -n womenswear get pods
 ### دسترسی به Ingress
 ```bash
 minikube ip
-# سپس در فایل hosts (اختیاری) دامنه‌های زیر را به IP بالا نگاشت کنید:
+# سپس در فایل hosts دامنه‌های زیر را به IP بالا نگاشت کنید:
 # api.womenswear.local / shop.womenswear.local
 ```
 
@@ -86,8 +68,6 @@ minikube ip
 
 ---
 
-## نکته‌ی ارزیابی
-این پروژه دقیقاً deliverableهای تکلیف را پوشش می‌دهد:
 - طراحی معماری + قراردادهای API + طراحی DB
 - پیاده‌سازی سرویس‌ها
 - ارتباط sync (REST) و async (RabbitMQ)
@@ -95,5 +75,3 @@ minikube ip
 - Docker + Compose + Kubernetes YAML + Ingress
 - CI/CD با GitHub Actions
 - Monitoring با Prometheus/Grafana
-
-موفق باشید ✨
