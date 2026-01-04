@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: payment-db
+  namespace: womenswear
+spec:
+  serviceName: payment-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-db
+  template:
+    metadata:
+      labels:
+        app: payment-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "payment_service"
+            - name: POSTGRES_PASSWORD
+              value: "payment_service"
+            - name: POSTGRES_DB
+              value: "payment_service"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-db
+  namespace: womenswear
+spec:
+  selector:
+    app: payment-db
+  ports:
+    - name: pg
+      port: 5432
+      targetPort: 5432

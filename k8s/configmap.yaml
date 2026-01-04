@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: womenswear-config
+  namespace: womenswear
+data:
+  JWT_ALG: "HS256"
+  JWT_EXPIRE_MINUTES: "60"
+  USER_SERVICE_URL: "http://user-service:8000"
+  PRODUCT_SERVICE_URL: "http://product-service:8000"
+  PAYMENT_SERVICE_URL: "http://payment-service:8000"
+  RABBITMQ_EXCHANGE: "orders"
+  RABBITMQ_QUEUE: "order_events"

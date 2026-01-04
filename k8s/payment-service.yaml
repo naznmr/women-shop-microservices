@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: womenswear
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: payment-service:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PAYMENT_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: womenswear-secrets
+                  key: PAYMENT_DB_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: womenswear
+spec:
+  selector:
+    app: payment-service
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

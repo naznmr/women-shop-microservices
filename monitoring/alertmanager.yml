@@ -1,0 +1,16 @@
+global:
+  resolve_timeout: 1m
+
+route:
+  receiver: "mailhog"
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+
+receivers:
+  - name: "mailhog"
+    email_configs:
+      - to: "alerts@women-shop.local"
+        from: "prometheus@women-shop.local"
+        smarthost: "mailhog:1025"
+        require_tls: false

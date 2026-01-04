@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: user-db
+  namespace: womenswear
+spec:
+  serviceName: user-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-db
+  template:
+    metadata:
+      labels:
+        app: user-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "user_service"
+            - name: POSTGRES_PASSWORD
+              value: "user_service"
+            - name: POSTGRES_DB
+              value: "user_service"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-db
+  namespace: womenswear
+spec:
+  selector:
+    app: user-db
+  ports:
+    - name: pg
+      port: 5432
+      targetPort: 5432

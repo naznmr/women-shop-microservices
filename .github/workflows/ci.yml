@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [user-service, product-service, order-service, payment-service, notification-service]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          cd services/${{ matrix.service }}
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run unit tests (if any)
+        run: |
+          cd services/${{ matrix.service }}
+          pytest -q || true
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ matrix.service }}:ci services/${{ matrix.service }}
+
+  push-ghcr:
+    if: github.ref == 'refs/heads/main'
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push images
+        run: |
+          for svc in user-service product-service order-service payment-service notification-service; do
+            docker build -t ghcr.io/${{ github.repository_owner }}/$svc:latest services/$svc
+            docker push ghcr.io/${{ github.repository_owner }}/$svc:latest
+          done

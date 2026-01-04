@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-mongo
+  namespace: womenswear
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-mongo
+  template:
+    metadata:
+      labels:
+        app: product-mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-mongo
+  namespace: womenswear
+spec:
+  selector:
+    app: product-mongo
+  ports:
+    - port: 27017
+      targetPort: 27017

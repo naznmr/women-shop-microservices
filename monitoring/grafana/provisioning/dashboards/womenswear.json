@@ -1,0 +1,55 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "rate(http_requests_total[1m])",
+          "refId": "A"
+        }
+      ],
+      "title": "HTTP Requests/sec (all services)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "up",
+          "refId": "A"
+        }
+      ],
+      "title": "Service Up",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 39,
+  "title": "Womenswear Microservices",
+  "uid": "womenswear",
+  "version": 1
+}

@@ -1,0 +1,177 @@
+services:
+  user-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: user_service
+      POSTGRES_PASSWORD: user_service
+      POSTGRES_DB: user_service
+    ports: ["5433:5432"]
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+
+  order-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: order_service
+      POSTGRES_PASSWORD: order_service
+      POSTGRES_DB: order_service
+    ports: ["5434:5432"]
+    volumes:
+      - order_db_data:/var/lib/postgresql/data
+
+  payment-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: payment_service
+      POSTGRES_PASSWORD: payment_service
+      POSTGRES_DB: payment_service
+    ports: ["5435:5432"]
+    volumes:
+      - payment_db_data:/var/lib/postgresql/data
+  
+  notification-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: notification_service
+      POSTGRES_PASSWORD: notification_service
+      POSTGRES_DB: notification_service
+    ports: ["5436:5432"]
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+
+  product_mongo:
+    image: mongo:7
+    ports: ["27018:27017"]
+    volumes:
+      - mongo_data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025"   # UI
+      - "1025:1025"   # SMTP
+  
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+    ports:
+      - "9093:9093"
+    depends_on:
+      - mailhog
+
+  user-service:
+    build: ./services/user-service
+    env_file: .env
+    environment:
+      USER_DB_URL: ${USER_DB_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALG: ${JWT_ALG}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES}
+    ports: ["8001:8000"]
+    depends_on: [user-db]
+
+  product-service:
+    build: ./services/product-service
+    env_file: .env
+    environment:
+      MONGO_URL: ${MONGO_URL}
+      MONGO_DB: ${MONGO_DB}
+    ports: ["8002:8000"]
+    depends_on: [product_mongo]
+
+  payment-service:
+    build: ./services/payment-service
+    env_file: .env
+    environment:
+      PAYMENT_DB_URL: ${PAYMENT_DB_URL}
+    ports: ["8004:8000"]
+    depends_on: [payment-db]
+
+  order-service:
+    build: ./services/order-service
+    env_file: .env
+    environment:
+      ORDER_DB_URL: ${ORDER_DB_URL}
+      USER_SERVICE_URL: ${USER_SERVICE_URL}
+      PRODUCT_SERVICE_URL: ${PRODUCT_SERVICE_URL}
+      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALG: ${JWT_ALG}
+    ports: ["8003:8000"]
+    depends_on: [order-db, payment-service, product-service, rabbitmq]
+
+  notification-service:
+    build: ./services/notification-service
+    env_file: .env
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
+
+      NOTIFICATION_DB_URL: ${NOTIFICATION_DB_URL}
+
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_FROM: ${SMTP_FROM}
+
+      PYTHONUNBUFFERED: "1"
+    ports: ["8005:8000"]
+    depends_on: [rabbitmq, notification-db, mailhog]
+
+  prometheus:
+    image: prom/prometheus:v2.54.0
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+    ports: ["9090:9090"]
+    depends_on:
+      - alertmanager
+      - user-service
+      - product-service
+      - order-service
+      - payment-service
+      - notification-service
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    ports: ["3001:3000"]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on: [prometheus]
+
+  frontend:
+    build: ./frontend
+    environment:
+      NEXT_PUBLIC_API_BASE: http://localhost:8003
+      NEXT_PUBLIC_PRODUCT_BASE: http://localhost:8002
+      NEXT_PUBLIC_USER_BASE: http://localhost:8001
+
+      ORDER_BASE_INTERNAL: http://order-service:8000
+      PRODUCT_BASE_INTERNAL: http://product-service:8000
+      USER_BASE_INTERNAL: http://user-service:8000
+    ports: ["3000:3000"]
+    depends_on: [order-service, product-service, user-service]
+
+volumes:
+  user_db_data:
+  order_db_data:
+  payment_db_data:
+  mongo_data:
+  grafana_data:
+  notification_db_data:

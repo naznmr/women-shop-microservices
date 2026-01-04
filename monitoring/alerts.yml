@@ -1,0 +1,20 @@
+groups:
+  - name: womenshop-alerts
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Target {{ $labels.instance }} for job {{ $labels.job }} has been down for more than 1 minute."
+
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes > 300000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage in {{ $labels.job }}"
+          description: "{{ $labels.job }} is using high resident memory for more than 5 minutes."
